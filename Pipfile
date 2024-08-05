@@ -10,6 +10,11 @@ pylint = "*"
 djangorestframework = "*"
 django-cors-headers = "*"
 pylint-django = "*"
+openai = "*"
+requests = "*"
+python-dotenv = "*"
+psycopg2-binary = "*"
+django-csp = "*"
 
 [dev-packages]
 
