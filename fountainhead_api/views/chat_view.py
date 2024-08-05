@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 # Create an instance of the OpenAI class
-api_key = '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'
+api_key = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=api_key)
 
 @api_view(['POST'])
