@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from fountainhead_api.models import GameState
 from fountainhead_api.serializers import GameStateSerializer
 
-@api_view(['GET', 'POST'])
+@api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def my_state(request):
     game_state, created = GameState.objects.get_or_create(user=request.user)
@@ -14,7 +14,7 @@ def my_state(request):
         serializer = GameStateSerializer(game_state)
         return Response(serializer.data)
     
-    elif request.method == 'POST':
+    elif request.method == 'PUT':
         # Get the game state data from the request
         new_state = request.data.get('game_state')
         
