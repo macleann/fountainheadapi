@@ -53,8 +53,8 @@ def register(request):
             username=request.data['username'],
             email=request.data['email'],
             password=request.data['password'],
-            first_name=request.data['first_name'],
-            last_name=request.data['last_name']
+            first_name=request.data['firstName'],
+            last_name=request.data['lastName']
         )
         
         # Save the current game state
