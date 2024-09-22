@@ -16,6 +16,8 @@ python-dotenv = "*"
 psycopg2-binary = "*"
 django-csp = "*"
 gunicorn = "*"
+djangorestframework-simplejwt = "*"
+google-auth = "*"
 
 [dev-packages]
 

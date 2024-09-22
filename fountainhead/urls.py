@@ -14,17 +14,23 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include, get_resolver
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from fountainhead_api.views import my_state, clear_state, register, login, google_login, logout, get_user, chat
+from rest_framework_simplejwt.views import TokenRefreshView
+from fountainhead_api.views import (
+    my_state, clear_state, register, login, google_authenticate, 
+    logout, get_user, chat, CustomTokenObtainPairView
+)
 
 router = DefaultRouter(trailing_slash=False)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('token', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
     path('register', register, name='register'),
     path('login', login, name='login'),
-    path('google-login', google_login, name='google-login'),
+    path('google-authenticate', google_authenticate, name='google-authenticate'),
     path('logout', logout, name='logout'),
     path('user', get_user, name='get-user'),
     path('game-state', my_state, name='game-state'),
