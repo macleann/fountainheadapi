@@ -17,7 +17,7 @@ from fountainhead_api.models import GameState
 
 def get_user_data_with_game_state(user):
     user_serializer = UserSerializer(user)
-    game_state = GameState.objects.get(user=user)
+    game_state, created = GameState.objects.get_or_create(user=user)
     game_state_serializer = GameStateSerializer(game_state)
     return {
         "user": user_serializer.data,
