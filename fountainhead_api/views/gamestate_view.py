@@ -8,20 +8,28 @@ from fountainhead_api.serializers import GameStateSerializer
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def my_state(request):
-    game_state, created = GameState.objects.get_or_create(user=request.user)
+    game_state, created = GameState.objects.get_or_create(
+        user=request.user,
+        defaults={'state': {'locations': []}}
+    )
     
     if request.method == 'GET':
         serializer = GameStateSerializer(game_state)
         return Response(serializer.data)
     
     elif request.method == 'POST':
-        # Get the game state data from the request
         new_state = request.data.get('game_state')
         
         if new_state is None:
-            return Response({"error": "No game_state provided in the request"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "No game_state provided in the request"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        # Update the game state
+        # Clean the state before saving
+        if isinstance(new_state, dict) and 'state' in new_state:
+            new_state = new_state['state']
+            
         game_state.state = new_state
         game_state.save()
         

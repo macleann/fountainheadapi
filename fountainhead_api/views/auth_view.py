@@ -17,7 +17,10 @@ from fountainhead_api.models import GameState
 
 def get_user_data_with_game_state(user):
     user_serializer = UserSerializer(user)
-    game_state, created = GameState.objects.get_or_create(user=user)
+    game_state, created = GameState.objects.get_or_create(
+        user=user,
+        defaults={'state': {'locations': []}}
+    )
     game_state_serializer = GameStateSerializer(game_state)
     return {
         "user": user_serializer.data,
@@ -62,7 +65,8 @@ def register(request):
     try:
         check_email = User.objects.filter(email=request.data['email']).first()
         if check_email is not None:
-            return Response({'error': 'A user with this email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'A user with this email already exists.'}, 
+                          status=status.HTTP_400_BAD_REQUEST)
         
         new_user = User.objects.create_user(
             username=request.data['username'],
@@ -72,28 +76,32 @@ def register(request):
             last_name=request.data['lastName']
         )
         
-        # Save the current game state
-        current_game_state = request.data.get('game_state', {})
-        GameState.objects.create(user=new_user, state=current_game_state)
+        # Initialize with clean state
+        initial_state = request.data.get('game_state', {'locations': []})
+        if isinstance(initial_state, dict) and 'state' in initial_state:
+            initial_state = initial_state['state']
+            
+        game_state = GameState.objects.create(
+            user=new_user,
+            state=initial_state
+        )
         
         tokens = get_tokens_for_user(new_user)
         response_data = get_user_data_with_game_state(new_user)
         response_data.update(tokens)
         return Response(response_data, status=status.HTTP_201_CREATED)
     except IntegrityError:
-        return Response({'error': 'A user with this username already exists.'}, status=status.HTTP_400_BAD_REQUEST)
-
+        return Response({'error': 'A user with this username already exists.'}, 
+                      status=status.HTTP_400_BAD_REQUEST)
+    
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def google_authenticate(request):
     credential = request.data['codeResponse']
-    current_game_state = request.data.get('game_state', {})
+    current_game_state = request.data.get('game_state', {'locations': []})
     
     try:
-        # Specify the CLIENT_ID of the app that accesses the backend
         idinfo = id_token.verify_oauth2_token(credential, requests.Request(), os.getenv('GOOGLE_CLIENT_ID'))
-
-        # ID token is valid. Get the user's Google Account email from the decoded token.
         email = idinfo['email']
         first_name = idinfo.get('given_name', '')
         last_name = idinfo.get('family_name', '')
@@ -111,8 +119,15 @@ def google_authenticate(request):
         if created:
             user.set_unusable_password()
             user.save()
-            # Create game state with the provided state for new user
-            GameState.objects.create(user=user, state=current_game_state)
+            
+            # Clean the state before creating
+            if isinstance(current_game_state, dict) and 'state' in current_game_state:
+                current_game_state = current_game_state['state']
+            
+            GameState.objects.create(
+                user=user, 
+                state=current_game_state
+            )
 
         tokens = get_tokens_for_user(user)
         response_data = get_user_data_with_game_state(user)
@@ -120,7 +135,6 @@ def google_authenticate(request):
         return Response(response_data, status=status.HTTP_200_OK)
 
     except ValueError:
-        # Invalid token
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
