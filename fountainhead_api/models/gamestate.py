@@ -7,7 +7,10 @@ class GameState(models.Model):
     last_updated = models.DateTimeField(auto_now=True)
 
     def set_state(self, data):
-        self.state = data
+        if isinstance(data, dict) and 'state' in data:
+            self.state = data['state']
+        else:
+            self.state = data
         self.save()
 
     def get_state(self):
